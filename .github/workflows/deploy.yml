@@ -1,0 +1,27 @@
+name: Deploy GustoWoltReporter
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Link Persistent Data
+        # We replace the repo's empty folders with links to your isolated data
+        run: |
+          rm -rf database public/uploads
+          ln -sfn /home/github/gusto-data/Gusto-Wolt-Data/database database
+          ln -sfn /home/github/gusto-data/Gusto-Wolt-Data/uploads public/uploads
+
+      - name: Install Dependencies
+        run: NODE_OPTIONS="--dns-result-order=ipv4first" npm install
+
+      - name: Deploy with PM2
+        run: |
+          sudo pm2 restart GustoWoltReporter || sudo pm2 start server.js --name GustoWoltReporter
